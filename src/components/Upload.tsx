@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { storage } from "../firebase/firebaseConfig";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid"; // Import the UUID library
@@ -8,6 +8,8 @@ function Upload() {
   const [files, setFiles] = useState<FileList | null>(null);
   const [progress, setProgress] = useState<number[]>([]);
   const [downloadURLs, setDownloadURLs] = useState<string[]>([]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = e.target.files;
@@ -65,6 +67,10 @@ function Upload() {
       .catch((error) => {
         console.error("Some files failed to upload:", error);
       });
+    setFiles(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""; // Reset input field value
+    }
   };
 
   return (
@@ -75,6 +81,7 @@ function Upload() {
         </Link>
         <h1>This is the upload page</h1>
         <input
+          ref={fileInputRef}
           type="file"
           accept="applicatoin/pdf"
           multiple
