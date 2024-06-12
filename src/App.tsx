@@ -27,7 +27,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/process" element={<Upload />} />
+        <Route path="/upload" element={<Upload />} />
       </Routes>
     </Router>
   );
