@@ -1,6 +1,21 @@
+from openai import OpenAI
+from dotenv import load_dotenv
+import os 
+import re
+import numpy as np
+import io
+import pandas as pd
+import traceback
+import time
+load_dotenv()
+
 from flask import Flask,jsonify, request
 from flask_cors import CORS
 import requests
+import assistant
+from firebase import bucket
+
+client = OpenAI(api_key=os.getenv("TMG_OpenAI_API"))
 
 app = Flask(__name__)
 CORS(app)
@@ -10,29 +25,40 @@ def home():
     data = {"data":["draw1","draw2","draw3"]}
     return jsonify(data)
 
-@app.route("/upload", methods=['POST'])
-def upload():
-    data = requests.get_json()
-    download_urls = data.get('downloadURLs', [])
-
-    for file_url in download_urls:
-        # Fetch the file from Firebase Storage
-        response = requests.get(file_url)
-        if response.status_code == 200:
-            file_content = response.content
-            # Process the file_content as needed
-            print(f"File processed successfully: {file_url}")
-        else:
-            print(f"Failed to fetch file: {file_url}")
-
-    return jsonify({"message": "Files processed successfully"}), 200
 
 @app.route('/api', methods=['POST'])
 def upload_urls():
+    # need foldername 
+    pdf_ByteURLs = []
     data = request.json  # Get JSON data from POST request
     urls = data.get('urls', [])
 
-    # Process or store the URLs as needed
+
+    # grab data from firebase via urls and download each drawing as bytes
+    for url in urls:
+        blob = bucket.blob(url)
+        file_bytes = blob.download_as_bytes()
+        # append to pdfByteArray
+    
+    # Create assistant
+    
+    # for every two files in pdfByteArray
+
+        # Create opeai thread
+        # create a file group (2drawings) from the byte array
+        # df = processPDFs()
+
+    # create excel file from dataframe 
+    # store excel file in folder 
+
+    # return success
+
+
+
+
+    
+
+
     # Example: Logging URLs to console
     print('Received URLs:', urls)
 

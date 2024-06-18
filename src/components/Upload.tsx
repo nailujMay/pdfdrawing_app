@@ -72,32 +72,6 @@ function Upload() {
     }
   };
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setData(e.target.value);
-  };
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    try {
-      // Make POST request
-      const res = await axios.post<{ response: string }>(
-        "http://127.0.0.1:5000/api",
-        { data }
-      );
-      setResponse(res.data.response);
-    } catch (error) {
-      console.error("Error making POST request", error);
-    }
-  };
-
-  // Create a file object with progress, filename, and url properties
-  // Create an array to store all these objects
-
-  // User uploads files to input field; array to store all these files, create a file object for each file
-
-  // Create folder for file package
-  // For each file in file_array upload to firebase storage.
-
   return (
     <>
       <div>
