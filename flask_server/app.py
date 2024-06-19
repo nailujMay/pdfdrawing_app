@@ -33,6 +33,7 @@ def home():
 def upload_urls():
     # need foldername 
     pdf_ByteURLs = []
+    pdf_names = []
     data = request.json  # Get JSON data from POST request
     urls = data.get('urls', [])
 
@@ -44,27 +45,29 @@ def upload_urls():
             file_bytes = blob.download_as_bytes()
             file_obj = io.BytesIO(file_bytes)
             file_obj.name = blob.name
+            print(file_obj.name)
             pdf_ByteURLs.append(file_obj)
+            pdf_names.append(file_obj)
 
-            # Create assistant
-            assistantID = assistant.createAssistant()
-            # # Create Dataframe
-            df = pd.DataFrame()
-            # # Create thread
-            thread = client.beta.threads.create()
-            df = assistant.process_pdfs(pdf_ByteURLs, assistantID, df,thread.id)
-            print(df)
+     
         except Exception as e:
             logging.error(f"Error processing URL {url}: {e}")
             return jsonify({'message': f"Error processing URL {url}", 'error': str(e)}), 500
+
+    # Create assistant
+    assistantID = assistant.createAssistant()
+    # Create Dataframe
+    df = pd.DataFrame()
     
-
-
-    # for every two files in pdfByteArray
-
-        # Create opeai thread
-        # create a file group (2drawings) from the byte array
-        # df = processPDFs()
+    # for every two files process drawings
+    for i in range(0, len(pdf_ByteURLs),2):
+        # Create assistant thread
+        thread = client.beta.threads.create()
+        # Make an array of the two drawings
+        pdf_files_group = pdf_ByteURLs[i:i+2]
+        # Append to the exisiting df with the new data
+        df = assistant.process_pdfs(pdf_names, pdf_files_group, assistantID, df,thread.id)
+        # print(df)
 
     # create excel file from dataframe 
     # store excel file in folder 

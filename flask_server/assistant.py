@@ -11,11 +11,8 @@ load_dotenv()
  
 client = OpenAI(api_key=os.getenv("TMG_OpenAI_API"))
 
-def process_pdfs(pdf_byteFiles,assistant_id,df,threadID):
-  # file_paths = [os.path.join(directory, file) for file in pdf_files]
-  # file_streams = [open(f"{folder_path}/{file}", "rb") for file in pdf_files]
+def process_pdfs(pdf_names,pdf_byteFiles,assistant_id,df,threadID):
   
-
   vector_store = client.beta.vector_stores.create(name="Engineering Drawings", expires_after={
   "anchor": "last_active_at",
   "days": 1
@@ -37,7 +34,7 @@ def process_pdfs(pdf_byteFiles,assistant_id,df,threadID):
     thread_id = threadID,
     role = "user",
     content = f"""
-        can you give me just a CSV response that lists out the bill of materials in each of the following files: {pdf_byteFiles}? Here is an example of the format. 
+        can you give me just a CSV response that lists out the bill of materials in each of the following files: {pdf_names}? Here is an example of the format. 
         [file_name, "description", "part_number", "weight", "material", quanitity]. Can you get rid of any commas in the description name and put N/A if not found. Do not skip any items. Not all files contain a bill of materials.  
         """,
   )
@@ -99,7 +96,7 @@ def process_pdfs(pdf_byteFiles,assistant_id,df,threadID):
     ])
     # df = df[~df.iloc[:, 0].str.contains('file_name', case=False)]
 
-    print(new_df)
+    # print(new_df)
     df = pd.concat([df, new_df], ignore_index=True)
     print('extracted csv data')  # Print the extracted JSON data
   except Exception as e:
