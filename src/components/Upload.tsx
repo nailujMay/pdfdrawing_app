@@ -17,12 +17,22 @@ function Upload() {
   const [downloadURLs, setDownloadURLs] = useState<string[]>([]);
   const [data, setData] = useState<string>("");
   const [response, setResponse] = useState<string | null>(null);
+  const [excelURL, setExcelURL] = useState<string>("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFiles(Array.from(e.target.files));
+    }
+  };
+
+  const handleDownload = () => {
+    if (excelURL) {
+      const link = document.createElement("a");
+      link.href = excelURL;
+      // link.download = "data.xlsx"; // Optional: specify the filename
+      link.click();
     }
   };
 
@@ -61,7 +71,9 @@ function Upload() {
           },
         })
         .then((response) => {
-          console.log("POST request successful:", response.data);
+          setExcelURL(response.data.url);
+          console.log(excelURL);
+
           // Handle success response from server if needed
         })
         .catch((error) => {
@@ -74,23 +86,22 @@ function Upload() {
   };
 
   return (
-    <>
-      <div>
+    <div className="m-16">
+      <div className="flex justify-center items-center">
         <input type="file" multiple onChange={handleFileChange} />
-        <button onClick={handleUpload}>Upload</button>
-        {uploadProgress.map((progress, index) => (
-          <div key={index}>
-            <div>{progress.file.name}</div>
-            <div>Progress: {progress.progress}%</div>
-            {progress.url && (
-              <a href={progress.url} target="_blank" rel="noopener noreferrer">
-                Download File
-              </a>
-            )}
-          </div>
-        ))}
+        <button className="border-2 px-4 py-1" onClick={handleUpload}>
+          Upload
+        </button>
       </div>
-    </>
+
+      <div className="flex justify-center">
+        {excelURL && (
+          <a href={excelURL} download>
+            <button className="m-4 border-2 px-4 py-1">Download Excel</button>
+          </a>
+        )}
+      </div>
+    </div>
   );
 }
 

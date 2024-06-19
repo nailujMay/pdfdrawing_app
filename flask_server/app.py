@@ -1,4 +1,4 @@
-from datetime import timedelta
+import datetime
 import io
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -22,6 +22,13 @@ client = OpenAI(api_key=os.getenv("TMG_OpenAI_API"))
 
 app = Flask(__name__)
 CORS(app)
+
+def df_to_excel_bytes(df):
+    excel_bytes = io.BytesIO()
+    with pd.ExcelWriter(excel_bytes, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False)
+    excel_bytes.seek(0)
+    return excel_bytes
 
 @app.route("/data")
 def home():
@@ -67,20 +74,26 @@ def upload_urls():
         pdf_files_group = pdf_ByteURLs[i:i+2]
         # Append to the exisiting df with the new data
         df = assistant.process_pdfs(pdf_names, pdf_files_group, assistantID, df,thread.id)
-        # print(df)
 
+    # Example: Logging URLs to console
+    print (df)
+    print('Received URLs:', urls)
     # create excel file from dataframe 
+    excel_bytes = df_to_excel_bytes(df)
+    df.to_excel('Caneng_test2.xlsx', index=False)
+    blob = bucket.blob('data.xlsx')  # Specify filename in Firebase Storage
+    blob.upload_from_file(excel_bytes, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    url = blob.generate_signed_url(expiration=datetime.timedelta(hours=1))
+    print(url)
+
+
     # store excel file in folder 
 
     # return success
-
-    # Example: Logging URLs to console
-    print('Received URLs:', urls)
-    # print("Converted to bytes", pdf_ByteURLs)
-    print('Firebase PDF URLs', pdf_ByteURLs)
+ 
 
     # Example: Sending response back to client
-    response = {'message': 'Received and processed URLs successfully','uploaded_urls': urls}
+    response = {'message': 'Here is the excel download url','url': url}
     return jsonify(response), 200
 if __name__ == "__main__":
     app.run(debug = True)
