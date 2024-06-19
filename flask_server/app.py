@@ -1,3 +1,5 @@
+from datetime import timedelta
+import io
 from openai import OpenAI
 from dotenv import load_dotenv
 import os 
@@ -40,16 +42,24 @@ def upload_urls():
         try:
             blob = bucket.blob(url)
             file_bytes = blob.download_as_bytes()
-            pdf_ByteURLs.append(file_bytes)
+            file_obj = io.BytesIO(file_bytes)
+            file_obj.name = blob.name
+            pdf_ByteURLs.append(file_obj)
+
+            # Create assistant
+            assistantID = assistant.createAssistant()
+            # # Create Dataframe
+            df = pd.DataFrame()
+            # # Create thread
+            thread = client.beta.threads.create()
+            df = assistant.process_pdfs(pdf_ByteURLs, assistantID, df,thread.id)
+            print(df)
         except Exception as e:
             logging.error(f"Error processing URL {url}: {e}")
             return jsonify({'message': f"Error processing URL {url}", 'error': str(e)}), 500
+    
 
 
-        # append to pdfByteArray
-    
-    # Create assistant
-    
     # for every two files in pdfByteArray
 
         # Create opeai thread
@@ -63,7 +73,8 @@ def upload_urls():
 
     # Example: Logging URLs to console
     print('Received URLs:', urls)
-    print("Converted to bytes", pdf_ByteURLs)
+    # print("Converted to bytes", pdf_ByteURLs)
+    print('Firebase PDF URLs', pdf_ByteURLs)
 
     # Example: Sending response back to client
     response = {'message': 'Received and processed URLs successfully','uploaded_urls': urls}

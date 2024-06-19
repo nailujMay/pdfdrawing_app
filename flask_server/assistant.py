@@ -11,9 +11,9 @@ load_dotenv()
  
 client = OpenAI(api_key=os.getenv("TMG_OpenAI_API"))
 
-def process_pdfs(folder_path,pdf_files,assistant_id,df,threadID):
+def process_pdfs(pdf_byteFiles,assistant_id,df,threadID):
   # file_paths = [os.path.join(directory, file) for file in pdf_files]
-  file_streams = [open(f"{folder_path}/{file}", "rb") for file in pdf_files]
+  # file_streams = [open(f"{folder_path}/{file}", "rb") for file in pdf_files]
   
 
   vector_store = client.beta.vector_stores.create(name="Engineering Drawings", expires_after={
@@ -23,7 +23,7 @@ def process_pdfs(folder_path,pdf_files,assistant_id,df,threadID):
 
   
   file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
-    vector_store_id=vector_store.id, files=file_streams
+    vector_store_id=vector_store.id, files=pdf_byteFiles
   )
 
   assistant = client.beta.assistants.update(
@@ -32,12 +32,12 @@ def process_pdfs(folder_path,pdf_files,assistant_id,df,threadID):
   )
 
   #create a new thread 
-  print (pdf_files)
+  # print (pdf_files)
   message = client.beta.threads.messages.create(
     thread_id = threadID,
     role = "user",
     content = f"""
-        can you give me just a CSV response that lists out the bill of materials in each of the following files: {pdf_files}? Here is an example of the format. 
+        can you give me just a CSV response that lists out the bill of materials in each of the following files: {pdf_byteFiles}? Here is an example of the format. 
         [file_name, "description", "part_number", "weight", "material", quanitity]. Can you get rid of any commas in the description name and put N/A if not found. Do not skip any items. Not all files contain a bill of materials.  
         """,
   )

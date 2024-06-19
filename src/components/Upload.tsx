@@ -31,7 +31,7 @@ function Upload() {
 
     try {
       for (const file of files) {
-        const path: string = file.name;
+        const path: string = `testing/${file.name}`;
         const storageRef = ref(storage, path);
         const uploadTask = uploadBytesResumable(storageRef, file);
 
