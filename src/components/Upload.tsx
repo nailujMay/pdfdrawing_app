@@ -31,7 +31,8 @@ function Upload() {
 
     try {
       for (const file of files) {
-        const storageRef = ref(storage, `test3/${file.name}`);
+        const path: string = file.name;
+        const storageRef = ref(storage, path);
         const uploadTask = uploadBytesResumable(storageRef, file);
 
         // Await the upload task completion
@@ -39,7 +40,7 @@ function Upload() {
 
         // Get download URL and collect in array
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-        urls.push(downloadURL);
+        urls.push(path);
       }
 
       // Log all download URLs once

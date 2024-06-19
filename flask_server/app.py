@@ -14,6 +14,7 @@ from flask_cors import CORS
 import requests
 import assistant
 from firebase import bucket
+import logging
 
 client = OpenAI(api_key=os.getenv("TMG_OpenAI_API"))
 
@@ -36,8 +37,15 @@ def upload_urls():
 
     # grab data from firebase via urls and download each drawing as bytes
     for url in urls:
-        blob = bucket.blob(url)
-        file_bytes = blob.download_as_bytes()
+        try:
+            blob = bucket.blob(url)
+            file_bytes = blob.download_as_bytes()
+            pdf_ByteURLs.append(file_bytes)
+        except Exception as e:
+            logging.error(f"Error processing URL {url}: {e}")
+            return jsonify({'message': f"Error processing URL {url}", 'error': str(e)}), 500
+
+
         # append to pdfByteArray
     
     # Create assistant
@@ -53,14 +61,9 @@ def upload_urls():
 
     # return success
 
-
-
-
-    
-
-
     # Example: Logging URLs to console
     print('Received URLs:', urls)
+    print("Converted to bytes", pdf_ByteURLs)
 
     # Example: Sending response back to client
     response = {'message': 'Received and processed URLs successfully','uploaded_urls': urls}
