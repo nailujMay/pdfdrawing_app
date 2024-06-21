@@ -22,6 +22,7 @@ client = OpenAI(api_key=os.getenv("TMG_OpenAI_API"))
 
 app = Flask(__name__)
 CORS(app)
+progress = 0
 
 def df_to_excel_bytes(df):
     excel_bytes = io.BytesIO()
@@ -30,10 +31,11 @@ def df_to_excel_bytes(df):
     excel_bytes.seek(0)
     return excel_bytes
 
-@app.route("/data")
-def home():
-    data = {"data":["draw1","draw2","draw3"]}
-    return jsonify(data)
+@app.route("/progress", methods=['GET'])
+def getProgress():
+    global progress
+    print("Almost finished  ", progress)
+    return jsonify({"progress": progress})
 
 
 @app.route('/api', methods=['POST'])
@@ -43,6 +45,9 @@ def upload_urls():
     pdf_names = []
     data = request.json  # Get JSON data from POST request
     urls = data.get('urls', [])
+    global progress
+    progress = 0 
+    pdfs_processed = 0
 
 
     # grab data from firebase via urls and download each drawing as bytes
@@ -55,8 +60,8 @@ def upload_urls():
             print(file_obj.name)
             pdf_ByteURLs.append(file_obj)
             pdf_names.append(file_obj)
+            
 
-     
         except Exception as e:
             logging.error(f"Error processing URL {url}: {e}")
             return jsonify({'message': f"Error processing URL {url}", 'error': str(e)}), 500
@@ -74,6 +79,10 @@ def upload_urls():
         pdf_files_group = pdf_ByteURLs[i:i+2]
         # Append to the exisiting df with the new data
         df = assistant.process_pdfs(pdf_names, pdf_files_group, assistantID, df,thread.id)
+    
+        pdfs_processed = pdfs_processed + len(pdf_files_group)
+        # update progress for status 
+        progress =round( pdfs_processed/ len(pdf_ByteURLs) * 100)
 
     # Example: Logging URLs to console
     print (df)
@@ -85,6 +94,8 @@ def upload_urls():
     blob.upload_from_file(excel_bytes, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     url = blob.generate_signed_url(expiration=datetime.timedelta(hours=1))
     print(url)
+    # progress = 0
+    
 
 
     # store excel file in folder 
