@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid"; // Import the UUID library
 import axios from "axios";
 
 import { ChakraProvider } from "@chakra-ui/react";
-import { Button, ButtonGroup, Input, Box } from "@chakra-ui/react";
+import { Button, ButtonGroup, Input, Box, Progress } from "@chakra-ui/react";
 
 interface UploadProgress {
   file: File;
@@ -18,13 +18,8 @@ function Upload() {
   const [files, setFiles] = useState<File[]>([]);
   const [progress, setProgress] = useState<string>("");
   const [downloadURLs, setDownloadURLs] = useState<string[]>([]);
-  const [data, setData] = useState<string>("");
-  const [response, setResponse] = useState<string | null>(null);
   const [excelURL, setExcelURL] = useState<string>("");
-  const [intervalId, setIntervalId] = useState<number | null>(null);
   const [stopProgress, setStopProgress] = useState<boolean>(false);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -39,6 +34,14 @@ function Upload() {
       // link.download = "data.xlsx"; // Optional: specify the filename
       link.click();
     }
+  };
+
+  const renderFileNamesAndTypes = () => {
+    return files.map((file, index) => (
+      <div key={index}>
+        <p>{file.name}</p>
+      </div>
+    ));
   };
 
   const handleUpload = async () => {
@@ -86,13 +89,15 @@ function Upload() {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     console.log("useEffect in effect");
+    console.log(progress);
 
     const fetchProgress = async () => {
       try {
         const progress = await axios.get("http://127.0.0.1:5000/progress");
         setProgress(progress.data.progress);
+        console.log(progress.data.progress);
 
-        if (progress.data.progress === "100") {
+        if (progress.data.progress === 100) {
           setStopProgress(true);
           clearInterval(interval);
         }
@@ -104,9 +109,7 @@ function Upload() {
     fetchProgress();
 
     if (!stopProgress) {
-      interval = setInterval(() => {
-        fetchProgress();
-      }, 2000); // Fetch data every 5 seconds (adjust as needed)
+      interval = setInterval(fetchProgress, 2000);
     }
 
     // Clean up interval to avoid memory leaks
@@ -115,17 +118,37 @@ function Upload() {
 
   return (
     <ChakraProvider>
-      <div className="m-16">
-        <div className="flex justify-center items-center">
-          <Input type="file" multiple id="file" onChange={handleFileChange} />
-          <Button className="border-2 px-4 py-1" onClick={handleUpload}>
-            Upload
+      <div className="m-32">
+        <h1 className="flex justify-center my-8 text-4xl ">
+          Engineering Drawing Parser
+        </h1>
+
+        <div className="flex flex-col justify-center items-center border-2 w-3/4 h-3/4 mx-auto p-10 rounded-lg">
+          <div className="my-4">
+            <h2>Uploaded Files:</h2>
+            {files.length > 0 ? (
+              renderFileNamesAndTypes()
+            ) : (
+              <p>No files uploaded yet.</p>
+            )}
+          </div>
+          <input
+            type="file"
+            multiple
+            id="file"
+            onChange={handleFileChange}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer "
+          />
+          <Button className="" onClick={handleUpload}>
+            Process
           </Button>
-          <div className="mx-4 my-1">{progress && <p>{progress}</p>}</div>
         </div>
+        {progress ? (
+          <Progress value={Number(progress)} className="my-4" />
+        ) : null}
 
         <div className="flex justify-center">
-          {excelURL && (
+          {stopProgress && (
             <a href={excelURL} download>
               <button className="m-4 border-2 px-4 py-1">Download Excel</button>
             </a>

@@ -61,7 +61,6 @@ def upload_urls():
             pdf_ByteURLs.append(file_obj)
             pdf_names.append(file_obj)
             
-
         except Exception as e:
             logging.error(f"Error processing URL {url}: {e}")
             return jsonify({'message': f"Error processing URL {url}", 'error': str(e)}), 500
@@ -94,7 +93,7 @@ def upload_urls():
     blob.upload_from_file(excel_bytes, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     url = blob.generate_signed_url(expiration=datetime.timedelta(hours=1))
     print(url)
-    # progress = 0
+    
     
 
 
