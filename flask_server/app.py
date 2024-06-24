@@ -23,6 +23,7 @@ client = OpenAI(api_key=os.getenv("TMG_OpenAI_API"))
 app = Flask(__name__)
 CORS(app)
 progress = 0
+currentFiles = []
 
 def df_to_excel_bytes(df):
     excel_bytes = io.BytesIO()
@@ -35,7 +36,7 @@ def df_to_excel_bytes(df):
 def getProgress():
     global progress
     print("Almost finished  ", progress)
-    return jsonify({"progress": progress})
+    return jsonify({"progress": progress, "currentFiles":currentFiles})
 
 
 @app.route('/api', methods=['POST'])
@@ -48,7 +49,6 @@ def upload_urls():
     global progress
     progress = 0 
     pdfs_processed = 0
-
 
     # grab data from firebase via urls and download each drawing as bytes
     for url in urls:
@@ -81,7 +81,8 @@ def upload_urls():
     
         pdfs_processed = pdfs_processed + len(pdf_files_group)
         # update progress for status 
-        progress =round( pdfs_processed/ len(pdf_ByteURLs) * 100)
+        progress =round( pdfs_processed/ len(pdf_ByteURLs) * 75)
+        print(progress)
 
     # Example: Logging URLs to console
     print (df)
@@ -94,9 +95,6 @@ def upload_urls():
     url = blob.generate_signed_url(expiration=datetime.timedelta(hours=1))
     print(url)
     
-    
-
-
     # store excel file in folder 
 
     # return success
