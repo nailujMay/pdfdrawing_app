@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 
 interface ProgressBarProps {
   progress: number;
-  fileUpload: boolean;
   fileNames: string[];
 }
 
@@ -32,4 +31,4 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, fileNames }) => {
   );
 };
 
-// export default ProgressBar;
+export default ProgressBar;

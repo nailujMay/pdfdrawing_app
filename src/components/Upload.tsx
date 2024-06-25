@@ -4,7 +4,7 @@ import { storage } from "../firebase/firebaseConfig";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid"; // Import the UUID library
 import axios from "axios";
-
+import ProgressBar from "./ProgressBar";
 import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
 import { Flex, Text, Button, Progress } from "@radix-ui/themes";
@@ -22,12 +22,31 @@ function Upload() {
   const [excelURL, setExcelURL] = useState<string>("");
   const [stopProgress, setStopProgress] = useState<boolean>(false);
   const [currentFiles, setCurrentFiles] = useState<string[]>([]);
+  const [progressBar, setProgressBar] = useState<boolean>(false);
+  const [currFileNames, setCurrFileNames] = useState<string[]>([]);
+
+  console.log(stopProgress);
+  console.log(progress);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFiles(Array.from(e.target.files));
     }
   };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.post("http://127.0.0.1:5000/reset", {
+          // Add any other data to update in Firebase Realtime Database
+        });
+        console.log(response.data); // Assuming your backend returns a success message
+      } catch (error) {
+        console.error("Error updating data:", error);
+      }
+    };
+    // Call fetchData function when component mounts
+    fetchData();
+  }, []);
 
   const handleDownload = () => {
     if (excelURL) {
@@ -48,6 +67,9 @@ function Upload() {
 
   const handleUpload = async () => {
     const urls: string[] = [];
+    // setStopProgress(false);
+    setProgress(25);
+    setProgressBar(true);
 
     try {
       for (const file of files) {
@@ -61,7 +83,7 @@ function Upload() {
       }
       // Log all download URLs once
       console.log("All firebase paths: ", urls);
-      setProgress(25);
+
       console.log(progress);
       setDownloadURLs(urls); // Optionally update state for UI
     } catch (error) {
@@ -97,13 +119,14 @@ function Upload() {
     const fetchProgress = async () => {
       try {
         const progressAPI = await axios.get("http://127.0.0.1:5000/progress");
-        setProgress(
-          (prevProgress) => prevProgress + Number(progressAPI.data.progress)
-        );
+        setProgress(25 + Number(progressAPI.data.data[0].percent_done));
+        setCurrFileNames(progressAPI.data.data[0].curr_file_names);
         console.log(progress);
 
-        if (progressAPI.data.progress === 75) {
+        if (progressAPI.data.data[0].percent_done === 75) {
           setStopProgress(true);
+          setProgress(0);
+          setProgressBar(false);
           clearInterval(interval);
         }
       } catch (error) {
@@ -155,14 +178,14 @@ function Upload() {
             Process
           </Button>
         </div>
-        {progress ? <Progress value={progress} className="my-4" /> : null}
-      </div>
-      <div className="flex justify-center">
         {stopProgress && (
           <a href={excelURL} download>
             <button className="m-4 border-2 px-4 py-1">Download Excel</button>
           </a>
         )}
+        {progressBar ? (
+          <ProgressBar progress={progress} fileNames={currFileNames} />
+        ) : null}
       </div>
     </Theme>
   );

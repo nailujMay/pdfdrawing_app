@@ -11,19 +11,17 @@ import traceback
 import time
 load_dotenv()
 
-from flask import Flask,jsonify, request
+from flask import Flask,jsonify, request, g
 from flask_cors import CORS
 import requests
 import assistant
-from firebase import bucket
+from firebase import bucket, db
 import logging
 
 client = OpenAI(api_key=os.getenv("TMG_OpenAI_API"))
 
 app = Flask(__name__)
 CORS(app)
-progress = 0
-currentFiles = []
 
 def df_to_excel_bytes(df):
     excel_bytes = io.BytesIO()
@@ -32,11 +30,37 @@ def df_to_excel_bytes(df):
     excel_bytes.seek(0)
     return excel_bytes
 
+@app.route('/reset', methods=['POST'])
+def update_data():
+    try:
+        # Reset Firebase Realtime Database
+        reset_data = {
+        'curr_file_names': [],
+        'percent_done': 0
+            }
+        reset_ref = db.collection("progress").document('upload_task')
+        reset_ref.set(reset_data,merge = True)
+
+        return jsonify({'message': 'Data updated successfully'}), 200
+
+    except Exception as e:
+        return jsonify({'message': 'Error updating data', 'error': str(e)}), 500
+
 @app.route("/progress", methods=['GET'])
 def getProgress():
-    global progress
-    print("Almost finished  ", progress)
-    return jsonify({"progress": progress, "currentFiles":currentFiles})
+    progress_data = []
+    try:
+        progress = db.collection('progress')
+        docs = progress.get()
+
+        for doc in docs:
+            progress_data.append(doc.to_dict())
+
+        print(progress_data)
+        return jsonify({'data': progress_data}), 200
+
+    except Exception as e:
+        return jsonify({'message': 'Error fetching data', 'error': str(e)}), 500
 
 
 @app.route('/api', methods=['POST'])
@@ -46,9 +70,13 @@ def upload_urls():
     pdf_names = []
     data = request.json  # Get JSON data from POST request
     urls = data.get('urls', [])
-    global progress
-    progress = 0 
     pdfs_processed = 0
+    progress_data = {
+        'curr_file_names': [],
+        'percent_done': 0
+    }
+    progress_ref = db.collection("progress").document('upload_task')
+    
 
     # grab data from firebase via urls and download each drawing as bytes
     for url in urls:
@@ -81,8 +109,14 @@ def upload_urls():
     
         pdfs_processed = pdfs_processed + len(pdf_files_group)
         # update progress for status 
-        progress =round( pdfs_processed/ len(pdf_ByteURLs) * 75)
-        print(progress)
+        try:
+            progress_data['curr_file_names'] = urls[i:i+2]
+            progress_data['percent_done'] = round( pdfs_processed/ len(pdf_ByteURLs) * 75)
+            print(progress_data['percent_done'])
+            print(progress_data['curr_file_names'])
+            progress_ref.set(progress_data,merge = True)
+        except Exception as e:
+            logging.error(f"Error processing URL {url}: {e}")
 
     # Example: Logging URLs to console
     print (df)
@@ -99,7 +133,6 @@ def upload_urls():
 
     # return success
  
-
     # Example: Sending response back to client
     response = {'message': 'Here is the excel download url','url': url}
     return jsonify(response), 200
