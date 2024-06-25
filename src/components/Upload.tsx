@@ -7,7 +7,8 @@ import axios from "axios";
 import ProgressBar from "./ProgressBar";
 import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
-import { Flex, Text, Button, Progress } from "@radix-ui/themes";
+import { Flex, Text, Button, Progress, Heading } from "@radix-ui/themes";
+import { isDisabled } from "@testing-library/user-event/dist/utils";
 
 interface UploadProgress {
   file: File;
@@ -146,24 +147,39 @@ function Upload() {
 
   return (
     <Theme>
-      <div className=" m-32 w-3/4 h-3/4 justify-center items-center mx-auto ">
-        <h1 className="flex justify-center my-8 text-4xl ">
-          Engineering Drawing Parser
-        </h1>
+      <div className=" m-32 w-3/4 h-5/6 justify-center items-center mx-auto ">
+        <Heading size="9" className="flex justify-center my-8 ">
+          cool name
+        </Heading>
 
-        <div className="relative flex flex-col justify-center border-2 rounded-lg">
-          <div className="my-6 flex flex-col items-center">
-            <h2 className=" text-xl my-2">Upload Files</h2>
-            <div>
-              {files.length > 0 ? (
-                renderFileNamesAndTypes()
-              ) : (
-                <p className="flex justify-center my-6 ">
-                  No files uploaded yet
-                </p>
-              )}
+        <div className="relative flex flex-col justify-center border-2 rounded-lg w-3/4 h-5/6 mx-auto">
+          {!stopProgress ? (
+            <div className="my-6 flex flex-col items-center">
+              <h2 className=" text-xl my-2">Upload Files</h2>
+              <div>
+                {files.length > 0 ? (
+                  renderFileNamesAndTypes()
+                ) : (
+                  <p className="flex justify-center my-6 ">
+                    No files uploaded yet
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col m-4 justify-center items-center">
+              <Heading size="3">Processing Finished</Heading>
+              <a href={excelURL} download>
+                <Button className="">Download Excel</Button>
+              </a>
+            </div>
+          )}
+
+          {progressBar ? (
+            <div className="mx-8 my-4">
+              <ProgressBar progress={progress} fileNames={currFileNames} />
+            </div>
+          ) : null}
 
           <input
             type="file"
@@ -171,21 +187,15 @@ function Upload() {
             id="file"
             onChange={handleFileChange}
             className="absolute w-full h-full cursor-pointer opacity-0 "
+            disabled={stopProgress}
           />
         </div>
-        <div className="flex justify-center my-2">
+
+        <div className="flex justify-center items-center m-2">
           <Button size="3" variant="soft" onClick={handleUpload}>
             Process
           </Button>
         </div>
-        {stopProgress && (
-          <a href={excelURL} download>
-            <button className="m-4 border-2 px-4 py-1">Download Excel</button>
-          </a>
-        )}
-        {progressBar ? (
-          <ProgressBar progress={progress} fileNames={currFileNames} />
-        ) : null}
       </div>
     </Theme>
   );
