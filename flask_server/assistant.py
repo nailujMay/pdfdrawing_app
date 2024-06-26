@@ -65,8 +65,6 @@ def process_pdfs(pdf_names,pdf_byteFiles,assistant_id,df,threadID):
     # Use regex to extract JSON data
     match = re.search(regex_pattern, response, re.DOTALL)
     # match = re.findall(regex_pattern, response, re.DOTALL)
-
-
     # Check if a match is found
     if match:
       csv_response = match.group(1)  # Extract the JSON data from the match

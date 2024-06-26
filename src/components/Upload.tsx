@@ -25,9 +25,14 @@ function Upload() {
   const [currentFiles, setCurrentFiles] = useState<string[]>([]);
   const [progressBar, setProgressBar] = useState<boolean>(false);
   const [currFileNames, setCurrFileNames] = useState<string[]>([]);
+  const [start, setStart] = useState<boolean>(false);
 
   console.log(stopProgress);
   console.log(progress);
+
+  const handleReload = () => {
+    window.location.reload();
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -68,9 +73,9 @@ function Upload() {
 
   const handleUpload = async () => {
     const urls: string[] = [];
-    // setStopProgress(false);
     setProgress(25);
     setProgressBar(true);
+    setStart(true);
 
     try {
       for (const file of files) {
@@ -138,7 +143,7 @@ function Upload() {
     fetchProgress();
 
     if (!stopProgress) {
-      interval = setInterval(fetchProgress, 2000);
+      interval = setInterval(fetchProgress, 3000);
     }
 
     // Clean up interval to avoid memory leaks
@@ -147,31 +152,48 @@ function Upload() {
 
   return (
     <Theme>
-      <div className=" m-32 w-3/4 h-5/6 justify-center items-center mx-auto ">
-        <Heading size="9" className="flex justify-center my-8 ">
-          cool name
-        </Heading>
-
-        <div className="relative flex flex-col justify-center border-2 rounded-lg w-3/4 h-5/6 mx-auto">
+      <div className=" my-24 w-5/6 justify-center items-center mx-auto  ">
+        <div className="flex flex-col items-center text-center">
+          <Heading size="9" className="flex justify-center my-2 ">
+            Engineering Drawing Parser
+          </Heading>
+          <Heading weight="medium" className="my-1">
+            Upload a drawing package to summarize the bill of materials{" "}
+          </Heading>
+        </div>
+        <div className="relative flex flex-col justify-center border-2 rounded-lg w-[75vw] h-[50vh] mx-auto my-4">
           {!stopProgress ? (
             <div className="my-6 flex flex-col items-center">
-              <h2 className=" text-xl my-2">Upload Files</h2>
+              <Heading weight="medium" size="5" className="my-2">
+                Upload Files
+              </Heading>
               <div>
                 {files.length > 0 ? (
                   renderFileNamesAndTypes()
                 ) : (
-                  <p className="flex justify-center my-6 ">
+                  <Heading
+                    weight="regular"
+                    size="3"
+                    className="flex justify-center my-2 "
+                  >
                     No files uploaded yet
-                  </p>
+                  </Heading>
                 )}
               </div>
             </div>
           ) : (
             <div className="flex flex-col m-4 justify-center items-center">
-              <Heading size="3">Processing Finished</Heading>
-              <a href={excelURL} download>
-                <Button className="">Download Excel</Button>
-              </a>
+              <Heading size="3" className="my-2">
+                Processing Finished
+              </Heading>
+              <div className="flex ">
+                <a href={excelURL} download className="mx-2">
+                  <Button className="mx-2">Download Excel</Button>
+                </a>
+                <Button variant="soft" className="mx-2" onClick={handleReload}>
+                  Process again
+                </Button>
+              </div>
             </div>
           )}
 
@@ -180,22 +202,24 @@ function Upload() {
               <ProgressBar progress={progress} fileNames={currFileNames} />
             </div>
           ) : null}
-
-          <input
-            type="file"
-            multiple
-            id="file"
-            onChange={handleFileChange}
-            className="absolute w-full h-full cursor-pointer opacity-0 "
-            disabled={stopProgress}
-          />
+          {!stopProgress && (
+            <input
+              type="file"
+              multiple
+              id="file"
+              onChange={handleFileChange}
+              className="absolute w-full h-full cursor-pointer opacity-0 "
+              disabled={stopProgress}
+            />
+          )}
         </div>
-
-        <div className="flex justify-center items-center m-2">
-          <Button size="3" variant="soft" onClick={handleUpload}>
-            Process
-          </Button>
-        </div>
+        {!start ? (
+          <div className="flex justify-center items-center m-2">
+            <Button size="3" variant="solid" onClick={handleUpload}>
+              Process
+            </Button>
+          </div>
+        ) : null}
       </div>
     </Theme>
   );
