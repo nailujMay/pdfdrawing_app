@@ -27,10 +27,22 @@ function Upload() {
   const [currFileNames, setCurrFileNames] = useState<string[]>([]);
   const [start, setStart] = useState<boolean>(false);
 
+  const fetchData = async () => {
+    try {
+      const response = await axios.post("http://127.0.0.1:5000/reset", {
+        // Add any other data to update in Firebase Realtime Database
+      });
+      console.log(response.data); // Assuming your backend returns a success message
+    } catch (error) {
+      console.error("Error updating data:", error);
+    }
+  };
+
   console.log(stopProgress);
   console.log(progress);
 
   const handleReload = () => {
+    fetchData();
     window.location.reload();
   };
 
@@ -39,29 +51,10 @@ function Upload() {
       setFiles(Array.from(e.target.files));
     }
   };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.post("http://127.0.0.1:5000/reset", {
-          // Add any other data to update in Firebase Realtime Database
-        });
-        console.log(response.data); // Assuming your backend returns a success message
-      } catch (error) {
-        console.error("Error updating data:", error);
-      }
-    };
-    // Call fetchData function when component mounts
     fetchData();
   }, []);
-
-  const handleDownload = () => {
-    if (excelURL) {
-      const link = document.createElement("a");
-      link.href = excelURL;
-      // link.download = "data.xlsx"; // Optional: specify the filename
-      link.click();
-    }
-  };
 
   const renderFileNamesAndTypes = () => {
     return files.map((file, index) => (
@@ -208,7 +201,8 @@ function Upload() {
               multiple
               id="file"
               onChange={handleFileChange}
-              className="absolute w-full h-full cursor-pointer opacity-0 "
+              placeholder="Upload files"
+              className="absolute w-full h-full cursor-pointer opacity-0"
               disabled={stopProgress}
             />
           )}

@@ -3,30 +3,36 @@ import io
 from openai import OpenAI
 from dotenv import load_dotenv
 import os 
-import re
 import numpy as np
 import io
 import pandas as pd
-import traceback
-import time
+
 load_dotenv()
 
 from flask import Flask,jsonify, request, g
 from flask_cors import CORS
-import requests
 import assistant
 from firebase import bucket, db
 import logging
+import cleanup
 
 client = OpenAI(api_key=os.getenv("TMG_OpenAI_API"))
 
 app = Flask(__name__)
 CORS(app)
 
-def df_to_excel_bytes(df):
+# def df_to_excel_bytes(df):
+#     excel_bytes = io.BytesIO()
+#     with pd.ExcelWriter(excel_bytes, engine='openpyxl') as writer:
+#         df.to_excel(writer, index=False)
+#     excel_bytes.seek(0)
+#     return excel_bytes
+
+def dfs_to_excel_bytes(df_list, sheet_names):
     excel_bytes = io.BytesIO()
     with pd.ExcelWriter(excel_bytes, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False)
+        for df, sheet_name in zip(df_list, sheet_names):
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
     excel_bytes.seek(0)
     return excel_bytes
 
@@ -117,25 +123,32 @@ def upload_urls():
             progress_ref.set(progress_data,merge = True)
         except Exception as e:
             logging.error(f"Error processing URL {url}: {e}")
+    
+    # Clean dataframe
+    cleaned_df = cleanup.clean_df(df)
+    summary_df = cleanup.materialSum(cleaned_df)
+
+    # with pd.ExcelWriter('data.xlsx') as writer:
+    #     # Write each DataFrame to a separate sheet
+    #     cleaned_df.to_excel(writer, sheet_name='BOM', index=False)
+    #     summary_df.to_excel(writer, sheet_name='Summary', index=False)
 
     # Example: Logging URLs to console
-    print (df)
+    print (cleaned_df)
+    print(summary_df)
     print('Received URLs:', urls)
     # create excel file from dataframe 
-    excel_bytes = df_to_excel_bytes(df)
-    df.to_excel('Caneng_test2.xlsx', index=False)
+    excel_bytes = dfs_to_excel_bytes([cleaned_df, summary_df], ['BOM', 'Summary'])
+    # df.to_excel('Caneng_test2.xlsx', index=False)
     blob = bucket.blob('data.xlsx')  # Specify filename in Firebase Storage
     blob.upload_from_file(excel_bytes, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     url = blob.generate_signed_url(expiration=datetime.timedelta(hours=1))
     print(url)
-    
-    # store excel file in folder 
-
-    # return success
  
     # Example: Sending response back to client
     response = {'message': 'Here is the excel download url','url': url}
     return jsonify(response), 200
+
 if __name__ == "__main__":
     app.run(debug = True)
 

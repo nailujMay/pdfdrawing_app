@@ -1,1 +1,1 @@
- progress = 0 
+leanup.materialSum(cleaned_df

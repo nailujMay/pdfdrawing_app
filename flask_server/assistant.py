@@ -12,12 +12,10 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("TMG_OpenAI_API"))
 
 def process_pdfs(pdf_names,pdf_byteFiles,assistant_id,df,threadID):
-  
   vector_store = client.beta.vector_stores.create(name="Engineering Drawings", expires_after={
   "anchor": "last_active_at",
   "days": 1
   })
-
   
   file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
     vector_store_id=vector_store.id, files=pdf_byteFiles
@@ -92,8 +90,6 @@ def process_pdfs(pdf_names,pdf_byteFiles,assistant_id,df,threadID):
     new_df = pd.DataFrame(valid_lines, columns=[
       "File Name", "Description", "Part Number", "Weight", "Material", "Quantity"
     ])
-    # df = df[~df.iloc[:, 0].str.contains('file_name', case=False)]
-
     # print(new_df)
     df = pd.concat([df, new_df], ignore_index=True)
     print('extracted csv data')  # Print the extracted JSON data
@@ -101,13 +97,13 @@ def process_pdfs(pdf_names,pdf_byteFiles,assistant_id,df,threadID):
     # Print the error traceback
     print('error with dataframe')
     traceback.print_exc()
-  
+
+  # clean up the dataframe
   df = df.applymap(lambda x: x.replace('"', '') if isinstance(x, str) else x)
 
   deleted_vector_store = client.beta.vector_stores.delete(
   vector_store_id= vector_store.id
   )
-
   return df
 
 def createAssistant():
