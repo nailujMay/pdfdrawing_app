@@ -8,6 +8,7 @@ import ProgressBar from "./ProgressBar";
 import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
 import { Flex, Text, Button, Progress, Heading } from "@radix-ui/themes";
+import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import { isDisabled } from "@testing-library/user-event/dist/utils";
 
 interface UploadProgress {
@@ -65,49 +66,53 @@ function Upload() {
   };
 
   const handleUpload = async () => {
-    const urls: string[] = [];
-    setProgress(25);
-    setProgressBar(true);
-    setStart(true);
+    if (files.length === 0) {
+      alert("No drawings uploaded");
+    } else {
+      const urls: string[] = [];
+      setProgress(25);
+      setProgressBar(true);
+      setStart(true);
 
-    try {
-      for (const file of files) {
-        const path: string = `testing/${file.name}`;
-        const storageRef = ref(storage, path);
-        const uploadTask = uploadBytesResumable(storageRef, file);
+      try {
+        for (const file of files) {
+          const path: string = `testing/${file.name}`;
+          const storageRef = ref(storage, path);
+          const uploadTask = uploadBytesResumable(storageRef, file);
 
-        // Await the upload task completion
-        await uploadTask;
-        urls.push(path);
+          // Await the upload task completion
+          await uploadTask;
+          urls.push(path);
+        }
+        // Log all download URLs once
+        console.log("All firebase paths: ", urls);
+
+        console.log(progress);
+        setDownloadURLs(urls); // Optionally update state for UI
+      } catch (error) {
+        console.error("Error uploading files:", error);
       }
-      // Log all download URLs once
-      console.log("All firebase paths: ", urls);
 
-      console.log(progress);
-      setDownloadURLs(urls); // Optionally update state for UI
-    } catch (error) {
-      console.error("Error uploading files:", error);
+      const requestBody = {
+        urls: urls,
+      };
+
+      // Send POST request using Axios
+      axios
+        .post("http://127.0.0.1:5000/api", requestBody, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+          setExcelURL(response.data.url);
+          console.log(excelURL);
+        })
+        .catch((error) => {
+          console.error("Error sending POST request:", error);
+          // Handle error sending request or receiving response
+        });
     }
-
-    const requestBody = {
-      urls: urls,
-    };
-
-    // Send POST request using Axios
-    axios
-      .post("http://127.0.0.1:5000/api", requestBody, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-      .then((response) => {
-        setExcelURL(response.data.url);
-        console.log(excelURL);
-      })
-      .catch((error) => {
-        console.error("Error sending POST request:", error);
-        // Handle error sending request or receiving response
-      });
   };
 
   useEffect(() => {
@@ -184,7 +189,7 @@ function Upload() {
                   <Button className="mx-2">Download Excel</Button>
                 </a>
                 <Button variant="soft" className="mx-2" onClick={handleReload}>
-                  Process again
+                  Upload another package
                 </Button>
               </div>
             </div>
