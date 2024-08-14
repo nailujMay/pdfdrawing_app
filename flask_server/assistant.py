@@ -8,7 +8,8 @@ import pandas as pd
 import traceback
 import time
 load_dotenv()
- 
+
+# client access the OpenAI api via the given API key.  
 client = OpenAI(api_key=os.getenv("TMG_OpenAI_API"))
 
 def process_pdfs(pdf_names,pdf_byteFiles,assistant_id,df,threadID):

@@ -2,6 +2,7 @@
   "name": "pdfdraw_app",
   "version": "0.1.0",
   "private": true,
+  "homepage": "./",
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/themes": "^3.1.1",

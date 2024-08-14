@@ -9,7 +9,7 @@ import pandas as pd
 
 load_dotenv()
 
-from flask import Flask,jsonify, request, g
+from flask import Flask,jsonify, request, g, send_from_directory
 from flask_cors import CORS
 import assistant
 from firebase import bucket, db
@@ -18,8 +18,16 @@ import cleanup
 
 client = OpenAI(api_key=os.getenv("TMG_OpenAI_API"))
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder= "build")
 CORS(app)
+
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve(path):
+    if path != "" and os.path.exists(app.static_folder + "/" + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, "index.html")
 
 # def df_to_excel_bytes(df):
 #     excel_bytes = io.BytesIO()
