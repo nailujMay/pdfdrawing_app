@@ -2,13 +2,16 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+require("dotenv").config();
+
+const apiKey = process.env.FIREBASE_API;
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyC9S1I2-Dy8JYT1TbhRj8fSL3401qbFzvw",
+  apiKey: apiKey,
   authDomain: "pdfdraw-30ab9.firebaseapp.com",
   projectId: "pdfdraw-30ab9",
   storageBucket: "pdfdraw-30ab9.appspot.com",

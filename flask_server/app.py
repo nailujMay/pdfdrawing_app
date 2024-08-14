@@ -92,7 +92,6 @@ def upload_urls():
     progress_ref = db.collection("progress").document('upload_task')
     
 
-    # grab data from firebase via urls and download each drawing as bytes
     for url in urls:
         try:
             blob = bucket.blob(url)
